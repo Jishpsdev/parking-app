@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "473181664730",
+    "project_id": "parking-app-ffe32",
+    "storage_bucket": "parking-app-ffe32.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473181664730:android:12ea3853b56e3c59e33ce3",
+        "android_client_info": {
+          "package_name": "com.example.parking_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZuuMqJtvqp13RjvBxsrlF3DUXGP3xpO4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

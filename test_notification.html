@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FCM Notification Tester</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: monospace;
+        }
+        button {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #333;
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 4px;
+            display: none;
+        }
+        .error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 FCM Notification Tester</h1>
+        
+        <div class="info">
+            <strong>📋 Instructions:</strong>
+            <ol>
+                <li>Paste your FCM token below (from Flutter app console)</li>
+                <li>Get your Server Key from: <a href="https://console.firebase.google.com/project/parking-app-ffe32/settings/cloudmessaging" target="_blank">Firebase Console</a></li>
+                <li>For <strong>Background notifications</strong>: minimize or switch away from your Flutter app tab</li>
+                <li>For <strong>Foreground notifications</strong>: keep your Flutter app tab active</li>
+                <li>Click "Send Test Notification" below</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <label for="serverKey">Firebase Server Key (Cloud Messaging API - Legacy):</label>
+            <input type="password" id="serverKey" placeholder="AAAA...">
+            <small>Find it in Firebase Console → Project Settings → Cloud Messaging → Server key</small>
+        </div>
+
+        <div class="section">
+            <label for="fcmToken">FCM Token:</label>
+            <textarea id="fcmToken" placeholder="Paste your FCM token from the Flutter app console..."></textarea>
+        </div>
+
+        <div class="section">
+            <label for="title">Notification Title:</label>
+            <input type="text" id="title" value="🎉 Test Notification" placeholder="Notification title">
+        </div>
+
+        <div class="section">
+            <label for="body">Notification Body:</label>
+            <input type="text" id="body" value="This is a test notification from the tester!" placeholder="Notification body">
+        </div>
+
+        <button onclick="sendNotification()">Send Test Notification</button>
+
+        <div class="response" id="response"></div>
+    </div>
+
+    <script>
+        function sendNotification() {
+            const serverKey = document.getElementById('serverKey').value.trim();
+            const fcmToken = document.getElementById('fcmToken').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const body = document.getElementById('body').value.trim();
+            const responseDiv = document.getElementById('response');
+
+            // Validate inputs
+            if (!serverKey) {
+                showResponse('❌ Please enter your Firebase Server Key', true);
+                return;
+            }
+            if (!fcmToken) {
+                showResponse('❌ Please enter your FCM Token', true);
+                return;
+            }
+
+            // Show loading
+            showResponse('⏳ Sending notification...', false);
+
+            // Prepare notification payload
+            const payload = {
+                to: fcmToken,
+                notification: {
+                    title: title || 'Test Notification',
+                    body: body || 'This is a test notification',
+                },
+                data: {
+                    type: 'test',
+                    timestamp: Date.now().toString()
+                }
+            };
+
+            // Send notification via FCM
+            fetch('https://fcm.googleapis.com/fcm/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `key=${serverKey}`
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success === 1) {
+                    showResponse('✅ Notification sent successfully! Check your Flutter app.', false);
+                    console.log('FCM Response:', data);
+                } else {
+                    showResponse(`❌ Failed to send notification: ${JSON.stringify(data)}`, true);
+                    console.error('FCM Error:', data);
+                }
+            })
+            .catch(error => {
+                showResponse(`❌ Error: ${error.message}`, true);
+                console.error('Error:', error);
+            });
+        }
+
+        function showResponse(message, isError) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.textContent = message;
+            responseDiv.className = 'response' + (isError ? ' error' : '');
+            responseDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
