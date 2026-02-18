@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/parking-app/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  
+  <!-- PWA Primary Meta Tags -->
+  <title>Smart Parking System</title>
+  <meta name="title" content="Smart Parking System">
+  <meta name="description" content="Real-time parking slot management system with location-based pre-reservation and live availability updates.">
+  <meta name="keywords" content="parking, smart parking, parking management, parking slots, real-time parking">
+  <meta name="author" content="Smart Parking System">
+  
+  <!-- PWA Configuration -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta name="background-color" content="#FFFFFF">
+  
+  <!-- Mobile Web App Capable -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Parking App">
+  
+  <!-- iOS Safari Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Parking App">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icons/Icon-512.png">
+  
+  <!-- Splash Screen for iOS -->
+  <link rel="apple-touch-startup-image" href="icons/Icon-512.png">
+  
+  <!-- Microsoft Tiles -->
+  <meta name="msapplication-TileColor" content="#000000">
+  <meta name="msapplication-TileImage" content="icons/Icon-192.png">
+  <meta name="msapplication-config" content="browserconfig.xml">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/Icon-512.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="shortcut icon" type="image/png" href="favicon.png"/>
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Smart Parking System">
+  <meta property="og:description" content="Real-time parking slot management system with location-based pre-reservation and live availability updates.">
+  <meta property="og:image" content="icons/Icon-512.png">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Smart Parking System">
+  <meta name="twitter:description" content="Real-time parking slot management system with location-based pre-reservation and live availability updates.">
+  <meta name="twitter:image" content="icons/Icon-512.png">
+  
+  <script>
+    // PWA Install Prompt Handler
+    let deferredPrompt;
+    
+    console.log('🚀 PWA script loaded, waiting for beforeinstallprompt event...');
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('💾 beforeinstallprompt event fired!');
+      console.log('Event details:', e);
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+      // Send a message to Flutter to show custom install button
+      console.log('📣 Dispatching pwa-install-available event to Flutter');
+      window.dispatchEvent(new CustomEvent('pwa-install-available'));
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('✅ PWA was installed');
+      deferredPrompt = null;
+      window.dispatchEvent(new CustomEvent('pwa-installed'));
+    });
+
+    // Function to trigger install prompt (can be called from Flutter)
+    window.showPWAInstallPrompt = function() {
+      console.log('📱 showPWAInstallPrompt called');
+      if (deferredPrompt) {
+        console.log('✅ Showing deferred prompt');
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('✅ User accepted the install prompt');
+          } else {
+            console.log('❌ User dismissed the install prompt');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        console.log('⚠️ No deferred prompt available. Reasons:');
+        console.log('  1. beforeinstallprompt event not fired yet');
+        console.log('  2. App might already be installed');
+        console.log('  3. PWA criteria not met (check manifest, service worker, HTTPS)');
+        console.log('  4. Check Chrome://flags/#enable-pwa-install-prompt');
+      }
+    };
+    
+    // Debug: Manual trigger for testing (call from browser console)
+    window.triggerFakePWAInstall = function() {
+      console.log('🧪 Manually triggering pwa-install-available event for testing');
+      window.dispatchEvent(new CustomEvent('pwa-install-available'));
+    };
+    
+    // Register service worker for PWA and FCM
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        // Register Firebase Messaging service worker for notifications
+        navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+          scope: '/'
+        })
+          .then(function(registration) {
+            console.log('🔔 FCM Service Worker registered:', registration.scope);
+            
+            // Check for updates periodically
+            setInterval(() => {
+              registration.update();
+            }, 60000); // Check every minute
+            
+            // Listen for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              console.log('🔄 New service worker found, installing...');
+              
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('✅ New service worker installed, refresh to update');
+                  // Optionally show update notification to user
+                  window.dispatchEvent(new CustomEvent('pwa-update-available'));
+                }
+              });
+            });
+          })
+          .catch(function(err) {
+            console.error('❌ Service Worker registration failed:', err);
+          });
+      });
+      
+      // Handle service worker messages
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        console.log('📬 Message from service worker:', event.data);
+        if (event.data && event.data.type === 'SYNC_DATA') {
+          window.dispatchEvent(new CustomEvent('sync-data', { detail: event.data }));
+        }
+      });
+      
+      // Detect if running as installed PWA
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                     window.navigator.standalone === true;
+      if (isPWA) {
+        console.log('🚀 Running as installed PWA');
+        document.documentElement.classList.add('pwa-mode');
+      } else {
+        console.log('🌐 Running in browser (not installed as PWA)');
+        
+        // Check PWA criteria after a delay
+        setTimeout(() => {
+          console.log('🔍 Checking PWA installation criteria:');
+          console.log('  - Service Worker:', 'serviceWorker' in navigator ? '✅ Supported' : '❌ Not supported');
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then((regs) => {
+              console.log('  - Registered Service Workers:', regs.length > 0 ? `✅ ${regs.length} registered` : '⚠️ None registered yet');
+              regs.forEach((reg, i) => {
+                console.log(`    ${i + 1}. Scope: ${reg.scope}, State: ${reg.active ? reg.active.state : 'inactive'}`);
+              });
+            });
+          }
+          console.log('  - HTTPS:', window.location.protocol === 'https:' || window.location.hostname === 'localhost' ? '✅ Secure' : '❌ Not secure');
+          console.log('  - Manifest:', document.querySelector('link[rel="manifest"]') ? '✅ Found' : '❌ Not found');
+          
+          // Check if beforeinstallprompt was already fired
+          if (!deferredPrompt) {
+            console.log('  - Install Prompt: ⚠️ beforeinstallprompt not fired yet');
+            console.log('    Possible reasons:');
+            console.log('    • PWA is already installed');
+            console.log('    • Service worker not fully activated');
+            console.log('    • Manifest has errors');
+            console.log('    • Need to close and reopen the app');
+            console.log('    ');
+            console.log('💡 TIP: Run window.triggerFakePWAInstall() in console to test the UI');
+          } else {
+            console.log('  - Install Prompt: ✅ Available (beforeinstallprompt fired)');
+          }
+        }, 3000);
+      }
+    }
+
+    // Online/Offline detection
+    window.addEventListener('online', () => {
+      console.log('🌐 Back online');
+      window.dispatchEvent(new CustomEvent('connection-status', { detail: { online: true } }));
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('📡 Gone offline');
+      window.dispatchEvent(new CustomEvent('connection-status', { detail: { online: false } }));
+    });
+  </script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

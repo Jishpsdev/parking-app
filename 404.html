@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Smart Parking System</title>
+  <meta name="description" content="Redirecting...">
+  <script>
+    // GitHub Pages SPA redirect
+    // This script takes the current URL and converts it to the format expected by a SPA
+    (function() {
+      var pathSegments = window.location.pathname.split('/').filter(function(segment) {
+        return segment;
+      });
+      
+      // Remove the repo name from the path
+      if (pathSegments.length > 0) {
+        pathSegments.shift(); // Remove repo name
+      }
+      
+      var redirect = '/' + pathSegments.join('/');
+      var query = window.location.search;
+      var hash = window.location.hash;
+      
+      // Redirect to the root with the path in hash
+      window.location.replace(
+        window.location.origin + 
+        '/' + window.location.pathname.split('/')[1] + 
+        '/#' + redirect + query + hash
+      );
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>
